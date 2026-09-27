@@ -95,12 +95,14 @@ sudo dnf update -y
 sudo dnf install nginx -y
 sudo systemctl start nginx
 sudo systemctl enable nginx
- SSL
+ 
 Point a free DuckDNS domain to the EC2 public IP (sign up at duckdns.org, create a subdomain, update it to the instance's IP)
 
 For HTTPS with Certbot (requires the domain to already resolve):
+
 sudo dnf install certbot python3-certbot-nginx -y
 sudo certbot --nginx -d mayankrawat.duckdns.org
+
 🛠️ Tech Stack
 AWS EC2 (Amazon Linux 2023)
 Nginx
