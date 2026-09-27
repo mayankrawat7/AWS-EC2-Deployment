@@ -2,11 +2,7 @@
 
 
 
-Personal portfolio site deployed on an AWS EC2 instance, accessible over both \*\*HTTP (insecure)\*\* and \*\*HTTPS (secure)\*\* to demonstrate the difference in a live environment.
-
-
-
-🔗 \*\*Live site:\*\* \[mayankrawat.duckdns.org](https://mayankrawat.duckdns.org)
+This project documents deploying a personal portfolio website on an AWS EC2 instance in two configurations — \*\*HTTP (insecure)\*\* and \*\*HTTPS (secure)\*\* — to understand and compare how each works. The instance was later terminated after the demonstration was complete.
 
 
 
@@ -28,35 +24,69 @@ Personal portfolio site deployed on an AWS EC2 instance, accessible over both \*
 
 | Domain | DuckDNS (mayankrawat.duckdns.org) |
 
-| Security | SSH restricted, HTTPS ready |
+| Security | SSH restricted, HTTPS enabled |
 
 
 
-\## Architecture
+\---
 
 
 
-\- \*\*EC2 Instance\*\*: Amazon Linux 2023, hosting the site via Nginx
-
-\- \*\*DuckDNS\*\*: Free dynamic DNS service mapping a domain to the EC2 public IP
-
-\- \*\*Security Group\*\*: Controls which ports are open to the internet
-
-\- \*\*SSL Certificate\*\*: Issued via Let's Encrypt/Certbot for the secure version
+\## Theory: How the Deployment Works
 
 
 
-\## 1. Insecure Deployment (HTTP)
+\*\*EC2 (Elastic Compute Cloud)\*\*
+
+A virtual server on AWS. You "rent" a machine (here, t2.micro — a free-tier eligible instance) and install whatever software you need on it, like a normal computer.
 
 
 
-\- Accessed via `http://mayankrawat.duckdns.org`
+\*\*Security Group\*\*
 
-\- Browser shows a \*\*"Not secure"\*\* warning in the address bar
+Acts as a virtual firewall attached to the EC2 instance. It controls which ports are open to incoming traffic from the internet (e.g. port 22 for SSH, port 80 for HTTP, port 443 for HTTPS). By default everything is blocked — you explicitly allow only what's needed.
 
-\- Port 80 open in the Security Group (inbound rule: HTTP, source `0.0.0.0/0`)
 
-\- \*\*Risk\*\*: Traffic (including any form data) travels unencrypted — visible to anyone intercepting it
+
+\*\*Nginx\*\*
+
+A web server software that listens for incoming HTTP/HTTPS requests and serves the website's files to visitors' browsers.
+
+
+
+\*\*DuckDNS\*\*
+
+A free dynamic DNS service. Instead of visitors typing a hard-to-remember IP address, DuckDNS maps a human-readable domain (`mayankrawat.duckdns.org`) to the EC2 instance's public IP.
+
+
+
+\*\*SSH restricted\*\*
+
+Port 22 (used to remotely log into the server) was limited to a specific IP rather than being open to everyone — reduces the attack surface for brute-force login attempts.
+
+
+
+\---
+
+
+
+\## Step 1: Insecure Deployment (HTTP)
+
+
+
+\*\*What was done:\*\*
+
+\- Installed Nginx on the EC2 instance
+
+\- Opened port 80 in the Security Group (inbound rule: HTTP, source `0.0.0.0/0`)
+
+\- Site was accessible via `http://mayankrawat.duckdns.org`
+
+
+
+\*\*Theory — why it's "insecure":\*\*
+
+HTTP sends data in plain text between the browser and server. Anyone intercepting the traffic (e.g. on a shared network) can read it. Browsers flag such sites with a "Not Secure" warning. There is no verification that the server is who it claims to be.
 
 
 
@@ -66,19 +96,27 @@ Personal portfolio site deployed on an AWS EC2 instance, accessible over both \*
 
 
 
-\## 2. Secure Deployment (HTTPS)
+\---
 
 
 
-\- Accessed via `https://mayankrawat.duckdns.org`
+\## Step 2: Secure Deployment (HTTPS)
 
-\- Browser shows a padlock — connection is encrypted and trusted
 
-\- Port 443 open in the Security Group (inbound rule: HTTPS, source `0.0.0.0/0`)
 
-\- SSL/TLS certificate obtained via Certbot for the DuckDNS domain
+\*\*What was done:\*\*
 
-\- \*\*Benefit\*\*: Traffic is encrypted end-to-end
+\- Obtained an SSL/TLS certificate via Let's Encrypt (Certbot) for the DuckDNS domain
+
+\- Opened port 443 in the Security Group (inbound rule: HTTPS, source `0.0.0.0/0`)
+
+\- Site was accessible via `https://mayankrawat.duckdns.org`
+
+
+
+\*\*Theory — why it's "secure":\*\*
+
+HTTPS = HTTP + TLS encryption. The certificate encrypts data between browser and server, so intercepted traffic is unreadable. It also verifies the server's identity via a trusted Certificate Authority (here, Let's Encrypt), which is why browsers show a padlock instead of a warning.
 
 
 
@@ -88,7 +126,11 @@ Personal portfolio site deployed on an AWS EC2 instance, accessible over both \*
 
 
 
-\## Notes: HTTP vs HTTPS on EC2
+\---
+
+
+
+\## Summary: HTTP vs HTTPS
 
 
 
@@ -108,15 +150,15 @@ Personal portfolio site deployed on an AWS EC2 instance, accessible over both \*
 
 
 
-\*\*Key takeaways:\*\*
+\## Key Takeaways
 
-\- Security Groups act as a virtual firewall — only open the ports you actually need
+\- Security Groups should only open the ports actually in use — minimize the attack surface
 
-\- Never use plain HTTP for anything handling sensitive data (logins, payments, personal info)
+\- Plain HTTP should never be used for anything handling sensitive data
 
-\- Free SSL certificates are available via Let's Encrypt (Certbot) for real domains
+\- Free SSL certificates (Let's Encrypt) make HTTPS accessible even for personal/small projects
 
-\- For production, it's best practice to redirect all HTTP traffic to HTTPS automatically
+\- The EC2 instance used here was terminated after this demonstration to avoid ongoing charges
 
 
 
@@ -138,9 +180,9 @@ sudo systemctl enable nginx
 
 
 
-\# Point a free DuckDNS domain to your EC2 public IP
+\# Point a free DuckDNS domain to the EC2 public IP
 
-\# (sign up at duckdns.org, create a subdomain, update it to your instance's IP)
+\# (sign up at duckdns.org, create a subdomain, update it to the instance's IP)
 
 
 
@@ -163,4 +205,6 @@ sudo certbot --nginx -d mayankrawat.duckdns.org
 \- DuckDNS (domain)
 
 \- Let's Encrypt (Certbot) for SSL
+
+
 
